@@ -179,11 +179,11 @@ class trainerC():
                            "valid_clock": valid_clock,
                            "valid_energy": valid_energy})
             finish_save_model_name = 'final' + self.cfg.model_params['save_path']
-            self.cfg.agent.model_save(finish_save_model_name)
+            self.agent.model_save(finish_save_model_name)
                 
             with open('my_dict.pkl', 'wb') as f:
                 pickle.dump(self.agent.train_V, f)
-                
+
     def roll_out(self):
         clock_list, energy_list = [], []
 
