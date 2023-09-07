@@ -49,7 +49,8 @@ class CloudMatrixModelposition(nn.Module):
         embedding_dim = self.model_params['embedding_dim']
 
         # self.position_embedding
-        self.position_embedding = PositionalEncoding(embedding_dim)
+        self.position_embedding = PositionalEncoding(embedding_dim, \
+                                                     self.model_params['device'])
         self.T_embedding = nn.Linear(self.nT, embedding_dim)
         self.M_embedding = nn.Linear(self.nM, embedding_dim)
         self.encoder = Matrix_Encoder(**model_params)
