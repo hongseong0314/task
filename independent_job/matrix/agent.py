@@ -1,6 +1,6 @@
 import torch
 
-from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition
+from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition, CloudMatrixModel_one
 from torch.optim import Adam as Optimizer
 from torch.optim.lr_scheduler import MultiStepLR as Scheduler
 
