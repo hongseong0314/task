@@ -1,8 +1,8 @@
 import torch
 
-from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition, CloudMatrixModel_one
 from torch.optim import Adam as Optimizer
 from torch.optim.lr_scheduler import MultiStepLR as Scheduler
+from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition, CloudMatrixModel_one
 
 class BGC():
     def __init__(self, cfg):
