@@ -202,21 +202,21 @@ class MixedScore_MultiHeadAttention(nn.Module):
         return out_concat
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, device):
-        super(PositionalEncoding, self).__init__()
+    def __init__(self, d_model, machine_num=5):
+        super().__init__()
         self.d_model = d_model
-        self.device = device
+        self.machine_num = machine_num #machine_num
 
-    def pre_set(self, task_num):
-        self.encoding = torch.zeros(1, task_num, self.d_model, device=self.device)
-        self.encoding.requires_grad = False
+        self.encoding = torch.zeros(self.machine_num, self.d_model, requires_grad=False)
 
-        pos = torch.arange(0, task_num, device =self.device)
+        pos = torch.arange(0, self.machine_num)
         pos = pos.float().unsqueeze(dim=1)
-        _2i = torch.arange(0, self.d_model, step=2, device=self.device).float()
+        _2i = torch.arange(0, self.d_model, step=2).float()
 
-        self.encoding[:, :, ::2] = torch.sin(pos / (10000 ** (_2i / self.d_model)))
-        self.encoding[:, :, 1::2] = torch.cos(pos / (10000 ** (_2i / self.d_model)))
+        self.encoding[:, ::2] = torch.sin(pos / (10000 ** (_2i / self.d_model)))
+        self.encoding[:, 1::2] = torch.cos(pos / (10000 ** (_2i / self.d_model)))
 
-    def forward(self, available_task):
-        return self.encoding[:, available_task, :]
+    def forward(self, machine_embedding):
+        batch_size = machine_embedding.size(0)
+        return machine_embedding + \
+            self.encoding[None, ...].expand(batch_size, self.machine_num, self.d_model)
