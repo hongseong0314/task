@@ -202,16 +202,17 @@ class MixedScore_MultiHeadAttention(nn.Module):
         return out_concat
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, machine_num=5):
+    def __init__(self, d_model, device, machine_num=5):
         super().__init__()
         self.d_model = d_model
+        self.device = device
         self.machine_num = machine_num #machine_num
 
-        self.encoding = torch.zeros(self.machine_num, self.d_model, requires_grad=False)
+        self.encoding = torch.zeros(self.machine_num, self.d_model, requires_grad=False, device = device)
 
-        pos = torch.arange(0, self.machine_num)
+        pos = torch.arange(0, self.machine_num, device = device)
         pos = pos.float().unsqueeze(dim=1)
-        _2i = torch.arange(0, self.d_model, step=2).float()
+        _2i = torch.arange(0, self.d_model, step=2, device = device).float()
 
         self.encoding[:, ::2] = torch.sin(pos / (10000 ** (_2i / self.d_model)))
         self.encoding[:, 1::2] = torch.cos(pos / (10000 ** (_2i / self.d_model)))
