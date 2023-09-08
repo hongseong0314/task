@@ -2,12 +2,13 @@ import torch
 
 from torch.optim import Adam as Optimizer
 from torch.optim.lr_scheduler import MultiStepLR as Scheduler
-from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition, CloudMatrixModel_one
+from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition, \
+                                        CloudMatrixModel_one, CloudMatrixModel_one_pose
 
 class BGC():
     def __init__(self, cfg):
         self.device = cfg.model_params['device']
-        self.model = CloudMatrixModel(**cfg.model_params).to(self.device)
+        self.model = CloudMatrixModel_one_pose(**cfg.model_params).to(self.device)
         self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
         self.scheduler = Scheduler(self.optimizer, **cfg.optimizer_params['scheduler'])
         self.save_path = cfg.model_params['save_path']

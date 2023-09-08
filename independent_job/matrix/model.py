@@ -110,6 +110,43 @@ class CloudMatrixModel_one(nn.Module):
         # shape: (B, M*T)
 
         return probs, G_t
+    
+class CloudMatrixModel_one_pose(nn.Module):
+    def __init__(self, **model_params):
+        super().__init__()
+        self.model_params = model_params
+
+        self.nT = self.model_params['nT']
+        self.nM = self.model_params['nM']   
+
+        embedding_dim = self.model_params['embedding_dim']
+
+        self.position_embedding = PositionalEncoding(embedding_dim, \
+                                                     self.model_params['device'])
+        self.T_embedding = nn.Linear(self.nT, embedding_dim)
+        self.M_embedding = nn.Linear(self.nM, embedding_dim)
+        self.encoder = Matrix_Encoder_one(**model_params)
+        self.decoder = Matrix_Decoder_with_critic(**model_params)
+
+    def forward(self, machine_state, task_state, D_TM, ninf_mask):
+        # machine_state : [B, M, Feature]
+        # task_state : [B, T, Feature]
+        # D_TM : [B, T, M, 2]
+        # ninf_mask : [B, M, T]
+
+        batch_size = machine_state.size(0)
+
+        row_emb = F.relu(self.T_embedding(task_state))
+        col_emb = F.relu(self.M_embedding(machine_state))
+        col_emb = self.position_embedding(col_emb)
+
+        encoded_task, encoded_machine = self.encoder(row_emb, col_emb, D_TM)
+        # (B, T, embedding), (B, M, embedding)
+
+        probs, G_t = self.decoder(encoded_machine, encoded_task, ninf_mask)
+        # shape: (B, M*T)
+
+        return probs, G_t
 
 class Matrix_Encoder_one(nn.Module):
     def __init__(self, **model_params):
