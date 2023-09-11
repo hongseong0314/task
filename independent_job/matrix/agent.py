@@ -8,7 +8,7 @@ from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposit
 class BGC():
     def __init__(self, cfg):
         self.device = cfg.model_params['device']
-        self.model = CloudMatrixModel_one_pose(**cfg.model_params).to(self.device)
+        self.model = CloudMatrixModelposition(**cfg.model_params).to(self.device)
         self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
         self.scheduler = Scheduler(self.optimizer, **cfg.optimizer_params['scheduler'])
         self.save_path = cfg.model_params['save_path']
@@ -108,6 +108,109 @@ class BGC():
         self.logpa_sum, self.G_ts, self.entropies = [], [], []
         return loss_mean.detach().cpu().numpy()
 
+class BGCmean():
+    def __init__(self, cfg):
+        self.device = cfg.model_params['device']
+        self.model = CloudMatrixModel_one(**cfg.model_params).to(self.device)
+        self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
+        self.scheduler = Scheduler(self.optimizer, **cfg.optimizer_params['scheduler'])
+        self.save_path = cfg.model_params['save_path']
+        self.load_path = cfg.model_params['load_path']
+        self.skip = cfg.model_params['skip']
+        self.machine_num = cfg.machines_number
+
+        self.policy_loss_weight = cfg.model_params['policy_loss_weight']
+        self.G_t_loss_weight = cfg.model_params['G_t_loss_weight']
+        self.entropy_loss_weight = cfg.model_params['entropy_loss_weight'] 
+
+        if self.load_path:
+            print(f"load weight : {self.load_path}")
+            self.model.load_state_dict(torch.load(cfg.model_params['load_path'],
+                                                  map_location=self.device))
+            self.model.eval()
+
+        self.logpa, self.G_t_pred, self.entropie = [], [], []
+
+        self.logpa_sum, self.G_ts, self.entropies = [], [], []
+
+    def model_save(self, save_path=None):
+        if save_path == None:
+            save_path = self.save_path
+        torch.save(self.model.state_dict(), save_path)
+
+    def trajectory(self, G_t):
+        # G_t_pred = torch.stack(self.G_t_pred).squeeze()
+        logpa = torch.stack(self.logpa).squeeze()
+        entropie = torch.stack(self.entropie).squeeze() 
+        
+        self.logpa_sum.append(logpa.sum())
+        self.entropies.append(entropie.mean())
+        self.G_ts.append(G_t)
+        # print(self.logpa_sum, self.entropies, self.G_ts)
+
+        self.logpa, self.G_t_pred, self.entropie = [], [], []
+
+    def decision(self, machine_feature, task_feature, D_TM, ninf_mask):
+        machine_feature = machine_feature.to(self.device)
+        task_feature = task_feature.to(self.device)
+        D_TM = D_TM.to(self.device)
+
+        if self.skip:
+            skip_mask = torch.zeros(size=(1, self.machine_num, 1))
+            ninf_mask = torch.cat((skip_mask, ninf_mask), dim=2)
+            ninf_mask = ninf_mask.to(self.device)
+        else:
+            ninf_mask = ninf_mask.to(self.device)
+
+        if self.model.training:
+            probs, G_t_pred = \
+                    self.model(machine_feature, task_feature, D_TM, ninf_mask)
+            # [B, M*T]
+            dist = torch.distributions.Categorical(probs)
+            task_selected = dist.sample()
+            # [B,]
+            logpa = dist.log_prob(task_selected)
+            # [B,]
+            entropie = dist.entropy()
+
+            self.logpa.append(logpa) ; self.entropie.append(entropie)
+            self.G_t_pred.append(G_t_pred)
+
+            return task_selected.detach().cpu().item()
+
+        else:
+            with torch.no_grad():
+               probs, _ = \
+                        self.model(machine_feature, task_feature, D_TM, ninf_mask)
+            task_selected = probs.argmax(dim=1)
+            return task_selected.detach().cpu().item()
+
+    def optimize_model(self):
+        G_T = torch.tensor(self.G_ts).to(self.device)
+        logpas = torch.stack(self.logpa_sum).squeeze()
+        entropies = torch.stack(self.entropies).squeeze()
+        # G_t_pred = torch.stack(self.G_t_pred).squeeze()
+
+        advantage_t = G_T - G_T.mean()
+
+        # loss
+        # critic_loss = (G_T - G_t_pred).pow(2).mul(0.5).mean()
+        policy_loss = (-advantage_t.detach() * logpas).mean()
+        entropie_loss = -entropies.mean()
+        loss_mean = (self.policy_loss_weight * policy_loss \
+                     + self.entropy_loss_weight * entropie_loss)
+        self.optimizer.zero_grad()
+        loss_mean.backward()
+        self.optimizer.step()
+
+        # self.model_save()
+        print(f"policy : {self.policy_loss_weight * policy_loss.detach().cpu().numpy()}")
+        print(f"entropy : {self.entropy_loss_weight * entropie_loss.detach().cpu().numpy()}")
+        # print(f"critic : {self.G_t_loss_weight * critic_loss.detach().cpu().numpy()}")
+
+        self.logpa_sum, self.G_ts, self.entropies = [], [], []
+        return loss_mean.detach().cpu().numpy()
+    
 class BGCQ():
     def __init__(self, cfg):
         self.device = cfg.model_params['device']
