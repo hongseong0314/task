@@ -16,7 +16,7 @@ from independent_job.env import Env
 from independent_job.problem import get_jobs
 # model
 from independent_job.matrix.alg import MatrixAlgorithm
-from independent_job.matrix.agent import BGC, BGCC
+from independent_job.matrix.agent import BGC, BGCC, BGCmean
 
 from independent_job.fit.alg import FitAlgorithm
 from independent_job.fit.model import Fit
@@ -47,7 +47,7 @@ class trainer():
                                             mips = mips) for cpu, mem_disk, pf, ps, pe, mips in zip(cpus,\
                 mems, pfs, pss, pes, mips)]
         self.cfg.max_energy = sum([m.ps + (m.pf - m.ps) * (1.0 ** m.pe) for m in self.cfg.machine_configs])
-        self.valid_task = [get_jobs(self.cfg) for _ in range(5)]
+        self.valid_task = [get_jobs(self.cfg) for _ in range(20)]
 
         self.best_valid_energy = self.cfg.max_energy * self.cfg.terminal_time
         wandb.init(project='cloud')
@@ -64,17 +64,19 @@ class trainer():
             for i in runing_bar:
                 self.agent.scheduler.step()
                 loss, clock, energy = self.training(i)
-                valid_clock, valid_energy = self.valiing()
+                
+                if i % 5 == 0:
+                    valid_clock, valid_energy = self.valiing()
 
-                runing_bar.set_postfix(train_loss=loss,
-                                   valid_clock=valid_clock,
-                                   valid_energy=valid_energy,)
+                    runing_bar.set_postfix(train_loss=loss,
+                                    valid_clock=valid_clock,
+                                    valid_energy=valid_energy,)
 
-                wandb.log({"Training loss": loss,
-                           "Training clock": clock,
-                           "Training energy": energy,
-                           "valid_clock": valid_clock,
-                           "valid_energy": valid_energy})
+                    wandb.log({"Training loss": loss,
+                            "Training clock": clock,
+                            "Training energy": energy,
+                            "valid_clock": valid_clock,
+                            "valid_energy": valid_energy})
             finish_save_model_name = 'final' + self.cfg.model_params['save_path']
             self.agent.model_save(finish_save_model_name)
                 
@@ -89,7 +91,6 @@ class trainer():
             sim.episode(algorithm)
             eg = sim.total_energy_consumptipn
             self.agent.trajectory(-eg / (sim.max_energy * sim.terminal_time)) 
-            # * sim.terminal_time
             
             clock_list.append(sim.time)
             energy_list.append(eg)
