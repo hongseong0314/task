@@ -16,7 +16,7 @@ from independent_job.env import Env
 from independent_job.problem import get_jobs
 # model
 from independent_job.matrix.alg import MatrixAlgorithm
-from independent_job.matrix.agent import BGC, BGCC, BGCmean
+from independent_job.matrix.agent import BGC, BGCC, BGCmean, BGCN
 
 from independent_job.fit.alg import FitAlgorithm
 from independent_job.fit.model import Fit
@@ -47,11 +47,11 @@ class trainer():
                                             mips = mips) for cpu, mem_disk, pf, ps, pe, mips in zip(cpus,\
                 mems, pfs, pss, pes, mips)]
         self.cfg.max_energy = sum([m.ps + (m.pf - m.ps) * (1.0 ** m.pe) for m in self.cfg.machine_configs])
-        self.valid_task = [get_jobs(self.cfg) for _ in range(20)]
+        self.valid_task = [get_jobs(self.cfg) for _ in range(5)]
 
         self.best_valid_energy = self.cfg.max_energy * self.cfg.terminal_time
         wandb.init(project='cloud')
-        wandb.run.name = self.name
+        wandb.run.name = self.name 
         wandb.run.save()
 
         wandb.config.update(self.cfg.to_dict())
@@ -65,7 +65,7 @@ class trainer():
                 self.agent.scheduler.step()
                 loss, clock, energy = self.training(i)
                 
-                if i % 5 == 0:
+                if i % 1 == 0:
                     valid_clock, valid_energy = self.valiing()
 
                     runing_bar.set_postfix(train_loss=loss,
@@ -81,7 +81,7 @@ class trainer():
             self.agent.model_save(finish_save_model_name)
                 
             
-    def roll_out(self):
+    def roll_out(self, epoch):
         clock_list, energy_list = [], []
         for _ in range(12):
             random.shuffle(self.cfg.machine_configs)
@@ -94,7 +94,9 @@ class trainer():
             
             clock_list.append(sim.time)
             energy_list.append(eg)
-        loss = self.agent.optimize_model()
+        entropy_weight = 0#np.clip(1 - (epoch / (self.cfg.epoch / 2)), a_min=0, a_max=None)
+        print(f"entropy_weight : {entropy_weight}")
+        loss = self.agent.optimize_model(entropy_weight)
 
         return loss, np.mean(clock_list), np.mean(energy_list)
     
@@ -104,7 +106,7 @@ class trainer():
         self.agent.model.train()
 
         self.cfg.task_configs = get_jobs(self.cfg)
-        loss, clock, energy = self.roll_out()
+        loss, clock, energy = self.roll_out(epoch)
 
         losses.append(loss)
         clocks.append(clock)
