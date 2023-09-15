@@ -1,7 +1,7 @@
 import torch
 
 from torch.optim import Adam as Optimizer
-from torch.optim.lr_scheduler import MultiStepLR as Scheduler
+from torch.optim.lr_scheduler import MultiStepLR, LambdaLR
 from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition, \
                                         CloudMatrixModel_one, CloudMatrixModel_one_pose
 
@@ -10,14 +10,16 @@ class BGC():
         self.device = cfg.model_params['device']
         self.model = CloudMatrixModel_one(**cfg.model_params).to(self.device)
         self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
-        self.scheduler = Scheduler(self.optimizer, **cfg.optimizer_params['scheduler'])
+        # self.scheduler = Scheduler(self.optimizer, **cfg.optimizer_params['scheduler'])
+        self.scheduler = LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
+    
         self.save_path = cfg.model_params['save_path']
         self.load_path = cfg.model_params['load_path']
         self.skip = cfg.model_params['skip']
         self.machine_num = cfg.machines_number
 
         self.policy_loss_weight = cfg.model_params['policy_loss_weight']
-        self.G_t_loss_weight = cfg.model_params['G_t_loss_weight']
+        # self.G_t_loss_weight = cfg.model_params['G_t_loss_weight']
         self.entropy_loss_weight = cfg.model_params['entropy_loss_weight'] 
 
         if self.load_path:
@@ -71,7 +73,7 @@ class BGC():
             entropie = dist.entropy()
 
             self.logpa.append(logpa) ; self.entropie.append(entropie)
-            self.G_t_pred.append(G_t_pred)
+            # self.G_t_pred.append(G_t_pred)
 
             return task_selected.detach().cpu().item()
 
@@ -83,7 +85,7 @@ class BGC():
             return task_selected.detach().cpu().item()
 
     def optimize_model(self, entropy_loss_weight):
-        G_T = torch.tensor(self.G_ts).to(self.device)
+        G_T = torch.tensor(self.G_ts, dtype=torch.float32).to(self.device)
         logpas = torch.stack(self.logpa_sum).squeeze()
         entropies = torch.stack(self.entropies).squeeze()
         # G_t_pred = torch.stack(self.G_t_pred).squeeze()
@@ -92,6 +94,7 @@ class BGC():
 
         # loss
         # critic_loss = (G_T - G_t_pred).pow(2).mul(0.5).mean()
+        
         policy_loss = (-advantage_t.detach() * logpas).mean()
         entropie_loss = -entropies.mean()
         loss_mean = (self.policy_loss_weight * policy_loss \

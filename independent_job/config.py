@@ -57,7 +57,7 @@ def matrix_config():
     cfg.optimizer_params = {
                         'optimizer': {
                             'lr': 1e-3,
-                            'weight_decay': 1e-5
+                            # 'weight_decay': 1e-5
                         },
                         'scheduler': {
                             'milestones': [101, 151],
