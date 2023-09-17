@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 from torch.optim import Adam as Optimizer
-from torch.optim.lr_scheduler import MultiStepLR as Scheduler
+from torch.optim.lr_scheduler import MultiStepLR, LambdaLR
 
 class Fit(object):
     def __init__(self,cfg):
@@ -11,7 +11,7 @@ class Fit(object):
         self.device = cfg.model_params['device']
         self.model = Qnet(**cfg.model_params).to(self.device)
         self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
-        self.scheduler = Scheduler(self.optimizer, **cfg.optimizer_params['scheduler'])
+        self.scheduler = LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
         self.save_path = cfg.model_params['save_path']
         self.load_path = cfg.model_params['load_path']
         self.policy_loss_weight = cfg.model_params['policy_loss_weight']
@@ -58,7 +58,7 @@ class Fit(object):
             logpa = None
             return task_selected.item()
 
-    def optimize_model(self):
+    def optimize_model(self, entropy_weight):
         G_T = torch.tensor(self.G_ts).to(self.device)
         logpas = torch.stack(self.logpa_sum).squeeze()
 
