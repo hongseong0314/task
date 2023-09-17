@@ -189,7 +189,8 @@ class trainerTest():
 
         with tqdm(range(self.cfg.epoch), unit="Run") as runing_bar:
             for i in runing_bar:
-                self.agent.scheduler.step()
+                if self.agent.scheduler:
+                    self.agent.scheduler.step()
                 loss, clock, energy, make_span = self.training(i)
                 
                 if i % 1 == 0:
@@ -213,7 +214,7 @@ class trainerTest():
     def roll_out(self, epoch):
         clock_list, energy_list, make_span = [], [], []
         for _ in range(12):
-            random.shuffle(self.cfg.machine_configs)
+            # random.shuffle(self.cfg.machine_configs)
             self.cfg.task_configs = copy.deepcopy(self.train_job)
             algorithm = self.algorithm(self.agent)
             sim = EnvTest(self.cfg)
@@ -228,7 +229,7 @@ class trainerTest():
             energy_list.append(eg)
             
         entropy_weight = self.cfg.model_params['entropy_loss_weight'] * \
-            np.clip(1 - (epoch / (self.cfg.epoch / 2)), a_min=0, a_max=None)
+            np.clip(1 - (epoch / (100)), a_min=0, a_max=None)
         print(f"entropy_weight : {entropy_weight}")
         loss = self.agent.optimize_model(entropy_weight)
 

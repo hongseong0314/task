@@ -8,7 +8,7 @@ from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposit
 class BGC():
     def __init__(self, cfg):
         self.device = cfg.model_params['device']
-        self.model = CloudMatrixModel_one(**cfg.model_params).to(self.device)
+        self.model = CloudMatrixModel_one_pose(**cfg.model_params).to(self.device)
         self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
         # self.scheduler = Scheduler(self.optimizer, **cfg.optimizer_params['scheduler'])
         self.scheduler = LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)

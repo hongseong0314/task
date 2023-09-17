@@ -46,9 +46,9 @@ def matrix_config():
                         'depth__init':(1/2)**(1/2),
                         'FC_init':(1/4)**(1/2),
 
-                        'ms_hidden_dim': 5,
+                        'ms_hidden_dim': 3,
                         'ms_layer1_init': (1/2)**(1/2),
-                        'ms_layer2_init': (1/5)**(1/2),
+                        'ms_layer2_init': (1/3)**(1/2),
 
                         'save_path' : None,
                         'load_path' : None,
@@ -57,7 +57,7 @@ def matrix_config():
     cfg.optimizer_params = {
                         'optimizer': {
                             'lr': 1e-3,
-                            # 'weight_decay': 1e-5
+                            'weight_decay': 1e-5
                         },
                         'scheduler': {
                             'milestones': [101, 151],
