@@ -18,7 +18,7 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
     epoch = 500
     jobs_len = 5
-    model_name = 'matrix'
+    model_name = 'fit'
 
     if model_name == 'matrix':
         cfg = matrix_config()
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         cfg.model_params['policy_loss_weight'] = 1.0
         cfg.model_params['entropy_loss_weight'] = 0.0
         # model_name/epoch/train_len/valid_len/job_len//seed
-        cfg.model_params['save_path'] = '{}_{}_{}TEST.pth'.format(
+        cfg.model_params['save_path'] = '{}_{}_{}_{}_TEST.pth'.format(
                                                                 cfg.model_name,
                                                                 cfg.epoch,
                                                                 cfg.jobs_len,
