@@ -59,7 +59,7 @@ class Fit(object):
             return task_selected.item()
 
     def optimize_model(self, entropy_weight):
-        G_T = torch.tensor(self.G_ts).to(self.device)
+        G_T = torch.tensor(self.G_ts, dtype=torch.float32).to(self.device)
         logpas = torch.stack(self.logpa_sum).squeeze()
 
         advantage_t = G_T - G_T.mean()

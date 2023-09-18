@@ -27,7 +27,7 @@ def base_config():
     cfg.terminal_time = 350
     return cfg
 
-def matrix_config():
+def depth_config():
     cfg = base_config()
     cfg.model_params = {
                         'embedding_dim': 64,
@@ -57,7 +57,43 @@ def matrix_config():
     cfg.optimizer_params = {
                         'optimizer': {
                             'lr': 1e-3,
-                            'weight_decay': 1e-5
+                            # 'weight_decay': 1e-5
+                        },
+                        'scheduler': {
+                            'milestones': [101, 151],
+                            'gamma': 0.1
+                        }
+                    }
+    return cfg
+
+def mix_config():
+    cfg = base_config()
+    cfg.model_params = {
+                        'embedding_dim': 64,
+                        'sqrt_embedding_dim': 64**(1/2),
+                        'encoder_layer_num': 2,
+                        'qkv_dim': 8,
+                        'sqrt_qkv_dim': 8**(1/2),
+                        'head_num': 8,
+                        'logit_clipping': 10,
+                        'ff_hidden_dim': 32,
+
+                        'nT':cfg.nT,
+                        'nM':cfg.nM,
+
+
+                        'ms_hidden_dim': 3,
+                        'ms_layer1_init': (1/2)**(1/2),
+                        'ms_layer2_init': (1/3)**(1/2),
+
+                        'save_path' : None,
+                        'load_path' : None,
+                        'skip':False,
+                    }
+    cfg.optimizer_params = {
+                        'optimizer': {
+                            'lr': 1e-3,
+                            # 'weight_decay': 1e-5
                         },
                         'scheduler': {
                             'milestones': [101, 151],
@@ -77,7 +113,7 @@ def fit_config():
     cfg.optimizer_params = {
                         'optimizer': {
                             'lr': 1e-3,
-                            'weight_decay': 1e-5
+                            # 'weight_decay': 1e-5
                         },
                         'scheduler': {
                             'milestones': [101, 151],

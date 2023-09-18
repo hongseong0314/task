@@ -16,7 +16,7 @@ from independent_job.env import Env, EnvTest
 from independent_job.problem import get_jobs
 # model
 from independent_job.matrix.alg import MatrixAlgorithm
-from independent_job.matrix.agent import BGC, BGCC, BGCmean, BGCN
+from independent_job.matrix.agent import BGCD, BGCM, BGCC, BGCmean, BGCN
 
 from independent_job.fit.alg import FitAlgorithm
 from independent_job.fit.model import Fit
@@ -150,7 +150,11 @@ class trainerTest():
         self.cfg = cfg
 
         if cfg.model_name == 'matrix':
-            self.agent = BGC(cfg)
+            if self.cfg.encoder == 'depth':
+                self.agent = BGCD(cfg)
+            else:
+                self.agent = BGCM(cfg)
+
             self.algorithm = lambda agent : MatrixAlgorithm(agent)
             self.name = f"{self.cfg.model_name}-{cfg.model_params['TMHA']}-{cfg.model_params['MMHA']}"
             
@@ -169,11 +173,15 @@ class trainerTest():
                 mems, pfs, pss, pes, mips)]
         self.cfg.max_energy = sum([m.ps + (m.pf - m.ps) * (1.0 ** m.pe) for m in self.cfg.machine_configs])
         
-        with open('train_scale.pickle', 'rb') as file:
+        with open('train_s_i_d.pkl', 'rb') as file:
             self.train_jobs = pickle.load(file)
         
-        self.valid_task = [np.random.choice(self.train_jobs, size=self.cfg.jobs_len, \
-                                            replace=False) for _ in range(5)]
+        with open('valid_job.pkl', 'rb') as file:
+            self.valid_task = pickle.load(file)
+        
+        # self.valid_task = [np.random.choice(self.train_jobs, size=self.cfg.jobs_len, \
+        #                                     replace=False) for _ in range(5)]
+        
 
         self.best_valid_energy = self.cfg.max_energy * self.cfg.terminal_time
         self.best_valid_make_span = self.cfg.terminal_time
@@ -204,6 +212,7 @@ class trainerTest():
                     wandb.log({"Training loss": loss,
                             "Training clock": clock,
                             "Training energy": energy,
+                            'Training_make_span':make_span,
                             "valid_clock": valid_clock,
                             "valid_energy": valid_energy,
                             'valid_make_span':valid_make_span,})
@@ -221,8 +230,8 @@ class trainerTest():
             sim.setup()
             sim.episode(algorithm)
             eg = sim.total_energy_consumptipn
-            self.agent.trajectory(-eg / (sim.max_energy * sim.terminal_time)) 
-            # self.agent.trajectory(-sim.total_make_span) 
+            # self.agent.trajectory(-eg / (sim.max_energy * sim.terminal_time)) 
+            self.agent.trajectory(-sim.total_make_span) 
             
             clock_list.append(sim.time)
             make_span.append(sim.total_make_span)
