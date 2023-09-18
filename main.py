@@ -9,20 +9,20 @@ from independent_job.config import fit_config
 
 if __name__ == '__main__':
     # seed
-    SEED = 42
+    SEED = 92
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     torch.cuda.manual_seed(SEED) 
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1' 
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
     epoch = 500
     jobs_len = 5
     model_name = 'fit'
 
     if model_name == 'matrix':
         # encoder type
-        encoder = 'depth'
+        encoder = 'mix'
         if encoder == 'depth':
             cfg = depth_config()
             cfg.model_params['TMHA'] = 'depth'
@@ -42,7 +42,7 @@ if __name__ == '__main__':
         cfg.model_params['policy_loss_weight'] = 1.0
         cfg.model_params['G_t_loss_weight'] = 0.6
         cfg.model_params['entropy_loss_weight'] = 0.000
-        cfg.model_params['save_path'] = '{}_{}_{}_{}_{}_{}0parm0Testspan.pth'.format(
+        cfg.model_params['save_path'] = '{}_{}_{}_{}_{}_{}0parm0Testj3_m_able.pth'.format(
                                                                         cfg.model_name,
                                                                         cfg.epoch,
                                                                         cfg.jobs_len,
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         cfg.model_params['policy_loss_weight'] = 1.0
         cfg.model_params['entropy_loss_weight'] = 0.0
         # model_name/epoch/train_len/valid_len/job_len//seed
-        cfg.model_params['save_path'] = '{}_{}_{}_{}_TESTspan.pth'.format(
+        cfg.model_params['save_path'] = '{}_{}_{}_{}_TEST.pth'.format(
                                                                 cfg.model_name,
                                                                 cfg.epoch,
                                                                 cfg.jobs_len,

@@ -296,11 +296,11 @@ class EnvTest(object):
                 self.arrived_job_check()
                 
             self.parallel_rollout(decision_maker)
-            self.total_energy_consumptipn += sum([m.energy_consumption() for m in self.machines])
         
-            self.time += 1
             if sum([m.running() for m in self.machines]):
+                self.total_energy_consumptipn += sum([m.energy_consumption() for m in self.machines])
                 self.total_make_span += 1
+            self.time += 1
 
             if (self.time >= self.terminal_time) and (decision_maker.model.training):
                 self.total_energy_consumptipn = self.terminal_time * self.max_energy

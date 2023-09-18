@@ -176,7 +176,7 @@ class trainerTest():
         with open('train_s_i_d.pkl', 'rb') as file:
             self.train_jobs = pickle.load(file)
         
-        with open('valid_job.pkl', 'rb') as file:
+        with open('j3.pkl', 'rb') as file:
             self.valid_task = pickle.load(file)
         
         # self.valid_task = [np.random.choice(self.train_jobs, size=self.cfg.jobs_len, \
@@ -230,8 +230,8 @@ class trainerTest():
             sim.setup()
             sim.episode(algorithm)
             eg = sim.total_energy_consumptipn
-            # self.agent.trajectory(-eg / (sim.max_energy * sim.terminal_time)) 
-            self.agent.trajectory(-sim.total_make_span) 
+            self.agent.trajectory(-eg / (sim.max_energy * sim.terminal_time)) 
+            # self.agent.trajectory(-sim.total_make_span) 
             
             clock_list.append(sim.time)
             make_span.append(sim.total_make_span)
