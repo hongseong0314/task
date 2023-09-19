@@ -248,9 +248,12 @@ class trainerTest():
         losses, clocks, energys, make_spans = [], [], [], []
         torch.cuda.empty_cache()
         self.agent.model.train()
-
-        self.train_job = np.random.choice(self.train_jobs, size=self.cfg.jobs_len, \
+        while True:
+            jobs = np.random.choice(self.train_jobs, size=self.cfg.jobs_len, \
                                             replace=False)
+            if sum([len(job.tasks) for job in jobs]) <= 80:
+                break
+        self.train_job = jobs
         loss, clock, energy, make_span = self.roll_out(epoch)
 
         losses.append(loss)

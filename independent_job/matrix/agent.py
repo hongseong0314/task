@@ -5,6 +5,12 @@ from torch.optim.lr_scheduler import MultiStepLR, LambdaLR
 from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition, \
                                         CloudMatrixModel_one, CloudMatrixModel_one_pose
 
+import torch
+
+from torch.optim import Adam as Optimizer
+from torch.optim.lr_scheduler import MultiStepLR, LambdaLR
+from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition, \
+                                        CloudMatrixModel_one, CloudMatrixModel_one_pose
 class BGCD():
     def __init__(self, cfg):
         self.device = cfg.model_params['device']
@@ -19,7 +25,6 @@ class BGCD():
         self.machine_num = cfg.machines_number
 
         self.policy_loss_weight = cfg.model_params['policy_loss_weight']
-        # self.G_t_loss_weight = cfg.model_params['G_t_loss_weight']
         self.entropy_loss_weight = cfg.model_params['entropy_loss_weight'] 
 
         if self.load_path:
@@ -70,7 +75,9 @@ class BGCD():
             # [B,]
             logpa = dist.log_prob(task_selected)
             # [B,]
-            entropie = dist.entropy()
+
+            prob_size = torch.tensor(probs.size(1), device=self.device)
+            entropie = torch.clip(dist.entropy() / prob_size.log(), min=0, max=1)
 
             self.logpa.append(logpa) ; self.entropie.append(entropie)
             # self.G_t_pred.append(G_t_pred)
