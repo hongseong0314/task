@@ -238,7 +238,7 @@ class trainerTest():
             energy_list.append(eg)
             
         entropy_weight = self.cfg.model_params['entropy_loss_weight'] * \
-            np.clip(1 - (epoch / (100)), a_min=0, a_max=None)
+            np.clip(1 - (epoch / (70)), a_min=0, a_max=None)
         print(f"entropy_weight : {entropy_weight}")
         loss = self.agent.optimize_model(entropy_weight)
 
@@ -261,6 +261,8 @@ class trainerTest():
         energys.append(energy)
         make_spans.append(make_span)
         
+        c_save_model_name = 'train' + self.cfg.model_params['save_path']
+        self.agent.model_save(c_save_model_name)
         return np.mean(losses), np.mean(clocks), np.mean(energys), np.mean(make_spans)
 
     def valiing(self):
