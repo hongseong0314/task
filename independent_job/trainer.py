@@ -251,7 +251,7 @@ class trainerTest():
         while True:
             jobs = np.random.choice(self.train_jobs, size=self.cfg.jobs_len, \
                                             replace=False)
-            if sum([len(job.tasks) for job in jobs]) <= 80:
+            if sum([len(job.tasks) for job in jobs]) <= 100:
                 break
         self.train_job = jobs
         loss, clock, energy, make_span = self.roll_out(epoch)
