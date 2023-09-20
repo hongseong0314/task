@@ -9,7 +9,7 @@ from independent_job.config import fit_config
 
 if __name__ == '__main__':
     # seed
-    SEED = 92
+    SEED = 71
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
@@ -18,11 +18,11 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
     epoch = 500
     jobs_len = 5
-    model_name = 'fit'
+    model_name = 'matrix'
 
     if model_name == 'matrix':
         # encoder type
-        encoder = 'mix'
+        encoder = 'depth'
         if encoder == 'depth':
             cfg = depth_config()
             cfg.model_params['TMHA'] = 'depth'
@@ -36,13 +36,14 @@ if __name__ == '__main__':
         cfg.model_name = model_name
         cfg.epoch = epoch
         cfg.jobs_len = jobs_len
+        cfg.seed = SEED
         cfg.device = torch.device('cuda') if torch.cuda.is_available() else "cpu"
         cfg.model_params['device'] = cfg.device
 
         cfg.model_params['policy_loss_weight'] = 1.0
         cfg.model_params['G_t_loss_weight'] = 0.6
-        cfg.model_params['entropy_loss_weight'] = 0.000
-        cfg.model_params['save_path'] = '{}_{}_{}_{}_{}_{}0parm0Testj3_m_able.pth'.format(
+        cfg.model_params['entropy_loss_weight'] = 0.00
+        cfg.model_params['save_path'] = '{}_{}_{}_{}_{}_{}00max100jobs70.pth'.format(
                                                                         cfg.model_name,
                                                                         cfg.epoch,
                                                                         cfg.jobs_len,

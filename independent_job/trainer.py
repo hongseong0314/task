@@ -6,6 +6,7 @@ import random
 import copy
 import pickle
 import gc
+import os
 # base
 from tqdm import tqdm
 from codes.job import Job
@@ -185,6 +186,13 @@ class trainerTest():
 
         self.best_valid_energy = self.cfg.max_energy * self.cfg.terminal_time
         self.best_valid_make_span = self.cfg.terminal_time
+        self.save_dir = self.name + f"_{self.cfg.seed}"
+        try:
+            if not os.path.exists(self.save_dir):
+                os.makedirs(self.save_dir)
+        except OSError:
+            print("Error: Failed to create the directory.")
+
         wandb.init(project='cloud')
         wandb.run.name = self.name 
         wandb.run.save()
@@ -216,8 +224,8 @@ class trainerTest():
                             "valid_clock": valid_clock,
                             "valid_energy": valid_energy,
                             'valid_make_span':valid_make_span,})
-            finish_save_model_name = 'final' + self.cfg.model_params['save_path']
-            self.agent.model_save(finish_save_model_name)
+            # finish_save_model_name = 'final' + self.cfg.model_params['save_path']
+            # self.agent.model_save(os.path.join(self.save_dir, finish_save_model_name))
                 
             
     def roll_out(self, epoch):
@@ -261,8 +269,8 @@ class trainerTest():
         energys.append(energy)
         make_spans.append(make_span)
         
-        c_save_model_name = 'train' + self.cfg.model_params['save_path']
-        self.agent.model_save(c_save_model_name)
+        epoch_save_model_name =  f"{epoch}_" + self.cfg.model_params['save_path']
+        self.agent.model_save(os.path.join(self.save_dir, epoch_save_model_name))
         return np.mean(losses), np.mean(clocks), np.mean(energys), np.mean(make_spans)
 
     def valiing(self):
@@ -285,7 +293,7 @@ class trainerTest():
         #     print("model save")
         if np.mean(make_spans) <= self.best_valid_make_span:
             self.best_valid_make_span = np.mean(make_spans)
-            self.agent.model_save()
+            self.agent.model_save(os.path.join(self.save_dir, self.cfg.model_params['save_path']))
             print("model save")
         return np.mean(clocks), np.mean(energys), np.mean(make_spans)
     
