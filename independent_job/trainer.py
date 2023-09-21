@@ -246,7 +246,7 @@ class trainerTest():
             energy_list.append(eg)
             
         entropy_weight = self.cfg.model_params['entropy_loss_weight'] * \
-            np.clip(1 - (epoch / (70)), a_min=0, a_max=None)
+            np.clip(1 - (epoch / (100)), a_min=0, a_max=None)
         print(f"entropy_weight : {entropy_weight}")
         loss = self.agent.optimize_model(entropy_weight)
 

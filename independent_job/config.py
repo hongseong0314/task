@@ -30,25 +30,20 @@ def base_config():
 def depth_config():
     cfg = base_config()
     cfg.model_params = {
-                        'embedding_dim': 64,
-                        'sqrt_embedding_dim': 64**(1/2),
-                        'encoder_layer_num': 3,
+                        'embedding_dim': 32,
+                        'sqrt_embedding_dim': 32**(1/2),
+                        'encoder_layer_num': 5,
                         'qkv_dim': 8,
                         'sqrt_qkv_dim': 8**(1/2),
-                        'head_num': 8,
+                        'head_num': 4,
                         'logit_clipping': 10,
-                        'ff_hidden_dim': 64,
+                        'ff_hidden_dim': 32,
 
                         'nT':cfg.nT,
                         'nM':cfg.nM,
-
-                        'depth_hidden_dim':4,
-                        'depth__init':(1/2)**(1/2),
-                        'FC_init':(1/4)**(1/2),
-
-                        'ms_hidden_dim': 3,
-                        'ms_layer1_init': (1/2)**(1/2),
-                        'ms_layer2_init': (1/3)**(1/2),
+                        'depth_hidden_dim':6,
+                        'depth__init':(1/3)**(1/2),
+                        'FC_init':(1/6)**(1/2),
 
                         'save_path' : None,
                         'load_path' : None,
@@ -69,22 +64,22 @@ def depth_config():
 def mix_config():
     cfg = base_config()
     cfg.model_params = {
-                        'embedding_dim': 64,
-                        'sqrt_embedding_dim': 64**(1/2),
+                        'embedding_dim': 32,
+                        'sqrt_embedding_dim': 32**(1/2),
                         'encoder_layer_num': 2,
                         'qkv_dim': 8,
                         'sqrt_qkv_dim': 8**(1/2),
-                        'head_num': 8,
+                        'head_num': 4,
                         'logit_clipping': 10,
-                        'ff_hidden_dim': 32,
+                        'ff_hidden_dim': 16,    
 
                         'nT':cfg.nT,
                         'nM':cfg.nM,
 
 
-                        'ms_hidden_dim': 3,
-                        'ms_layer1_init': (1/2)**(1/2),
-                        'ms_layer2_init': (1/3)**(1/2),
+                        'ms_hidden_dim': 6,
+                        'ms_layer1_init': (1/3)**(1/2),
+                        'ms_layer2_init': (1/6)**(1/2),
 
                         'save_path' : None,
                         'load_path' : None,
