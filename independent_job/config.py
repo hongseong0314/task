@@ -32,12 +32,12 @@ def depth_config():
     cfg.model_params = {
                         'embedding_dim': 32,
                         'sqrt_embedding_dim': 32**(1/2),
-                        'encoder_layer_num': 5,
+                        'encoder_layer_num': 3,
                         'qkv_dim': 8,
                         'sqrt_qkv_dim': 8**(1/2),
                         'head_num': 4,
                         'logit_clipping': 10,
-                        'ff_hidden_dim': 32,
+                        'ff_hidden_dim': 64,
 
                         'nT':cfg.nT,
                         'nM':cfg.nM,
@@ -71,7 +71,7 @@ def mix_config():
                         'sqrt_qkv_dim': 8**(1/2),
                         'head_num': 4,
                         'logit_clipping': 10,
-                        'ff_hidden_dim': 16,    
+                        'ff_hidden_dim': 32,    
 
                         'nT':cfg.nT,
                         'nM':cfg.nM,

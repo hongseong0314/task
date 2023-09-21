@@ -50,14 +50,21 @@ class Depth_MultiHeadAttention(nn.Module):
         depth_hidden_dim = model_params['depth_hidden_dim']
         depth_init = model_params['depth__init']
         FC_init = model_params['FC_init']
+        self.depth_sqrt_qkv_dim = depth_hidden_dim **(1/2)
         self.problem_size  = 3
         Wqkv = torch.torch.distributions.Uniform(low=-depth_init, high=depth_init).sample((head_num, self.problem_size, depth_hidden_dim))
         Bqkv = torch.torch.distributions.Uniform(low=-depth_init, high=depth_init).sample((head_num, depth_hidden_dim))
         self.Wqkv = nn.Parameter(Wqkv)
         self.Bqkv = nn.Parameter(Bqkv)
-        self.Wq = nn.Linear(depth_hidden_dim,depth_hidden_dim, bias=False)
-        self.Wk = nn.Linear(depth_hidden_dim,depth_hidden_dim, bias=False)
-        self.Wv = nn.Linear(depth_hidden_dim,depth_hidden_dim, bias=False)
+        # self.Wq = nn.Linear(depth_hidden_dim,depth_hidden_dim, bias=False)
+        # self.Wk = nn.Linear(depth_hidden_dim,depth_hidden_dim, bias=False)
+        # self.Wv = nn.Linear(depth_hidden_dim,depth_hidden_dim, bias=False)
+        Wq = torch.torch.distributions.Uniform(low=-FC_init, high=FC_init).sample((head_num, depth_hidden_dim, depth_hidden_dim))
+        Wk = torch.torch.distributions.Uniform(low=-FC_init, high=FC_init).sample((head_num, depth_hidden_dim, depth_hidden_dim))
+        Wv = torch.torch.distributions.Uniform(low=-FC_init, high=FC_init).sample((head_num, depth_hidden_dim, depth_hidden_dim))
+        self.Wq = nn.Parameter(Wq)
+        self.Wk = nn.Parameter(Wk)
+        self.Wv = nn.Parameter(Wv)
         # shape: (head, 2, depth_hidden)
 
         FC_weight = torch.torch.distributions.Uniform(low=-FC_init, high=FC_init).sample((head_num, depth_hidden_dim, 1))
@@ -91,14 +98,13 @@ class Depth_MultiHeadAttention(nn.Module):
         # [B, T, H, M, 2]
         depth_qkv = torch.matmul(a_e_feature_transposed, self.Wqkv)
         depth_qkv = F.gelu(depth_qkv + self.Bqkv[None, None, :, None, :])
-        #F.gelu
-        depth_q = self.Wq(depth_qkv)
-        depth_k = self.Wk(depth_qkv)
-        depth_v = self.Wv(depth_qkv)
+        depth_q = torch.matmul(depth_weights, self.Wq)
+        depth_k = torch.matmul(depth_weights, self.Wk)
+        depth_v = torch.matmul(depth_weights, self.Wv)
         # [B, T, H, M, depth_dim]
 
         depth_dot_product = torch.matmul(depth_q, depth_k.transpose(3, 4))
-        # depth_dot_product = depth_dot_product / sqrt_qkv_dim
+        depth_dot_product = depth_dot_product / self.depth_sqrt_qkv_dim
         # [B ,T, H, M, M]
 
         depth_weights = nn.Softmax(dim=4)(depth_dot_product)
