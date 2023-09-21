@@ -98,9 +98,9 @@ class Depth_MultiHeadAttention(nn.Module):
         # [B, T, H, M, 2]
         depth_qkv = torch.matmul(a_e_feature_transposed, self.Wqkv)
         depth_qkv = F.gelu(depth_qkv + self.Bqkv[None, None, :, None, :])
-        depth_q = torch.matmul(depth_weights, self.Wq)
-        depth_k = torch.matmul(depth_weights, self.Wk)
-        depth_v = torch.matmul(depth_weights, self.Wv)
+        depth_q = torch.matmul(depth_qkv, self.Wq)
+        depth_k = torch.matmul(depth_qkv, self.Wk)
+        depth_v = torch.matmul(depth_qkv, self.Wv)
         # [B, T, H, M, depth_dim]
 
         depth_dot_product = torch.matmul(depth_q, depth_k.transpose(3, 4))
