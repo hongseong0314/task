@@ -8,7 +8,7 @@ from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposit
 import torch
 
 from torch.optim import Adam as Optimizer
-from torch.optim.lr_scheduler import MultiStepLR, LambdaLR
+from torch.optim.lr_scheduler import MultiStepLR, LambdaLR, CosineAnnealingLR
 from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModelposition, \
                                         CloudMatrixModel_one, CloudMatrixModel_one_pose
 class BGCD():
@@ -17,7 +17,8 @@ class BGCD():
         self.model = CloudMatrixModel_one_pose(**cfg.model_params).to(self.device)
         self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
         # self.scheduler = Scheduler(self.optimizer, **cfg.optimizer_params['scheduler'])
-        self.scheduler = LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
+        # self.scheduler = LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
+        self.scheduler = CosineAnnealingLR(self.optimizer, T_max=59, eta_min=1e-5)
     
         self.save_path = cfg.model_params['save_path']
         self.load_path = cfg.model_params['load_path']
