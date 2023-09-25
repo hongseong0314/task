@@ -18,7 +18,7 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
     epoch = 500
     jobs_len = 5
-    model_name = 'matrix'
+    model_name = 'fit'
 
     if model_name == 'matrix':
         # encoder type
@@ -52,6 +52,7 @@ if __name__ == '__main__':
         cfg = fit_config()
         cfg.model_name = model_name
         cfg.seed = SEED
+        cfg.object = 'eng'
         # epoch
         cfg.epoch = epoch
         
