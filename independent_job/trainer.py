@@ -30,7 +30,7 @@ class trainer():
         self.cfg = cfg
 
         if cfg.model_name == 'matrix':
-            self.agent = BGC(cfg)
+            self.agent = BGCD(cfg)
             self.algorithm = lambda agent : MatrixAlgorithm(agent)
             self.name = f"{self.cfg.model_name}-{cfg.model_params['TMHA']}-{cfg.model_params['MMHA']}"
             
