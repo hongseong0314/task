@@ -26,7 +26,6 @@ class AddAndInstanceNormalization(nn.Module):
 
         return back_trans
 
-
 class FeedForward(nn.Module):
     def __init__(self, **model_params):
         super().__init__()

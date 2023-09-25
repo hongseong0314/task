@@ -17,7 +17,7 @@ class CloudMatrixModel(nn.Module):
         self.T_embedding = nn.Linear(self.nT, embedding_dim)
         self.M_embedding = nn.Linear(self.nM, embedding_dim)
         self.encoder = Matrix_Encoder(**model_params)
-        self.decoder = Matrix_Decoder_with_critic(**model_params)
+        self.decoder = Matrix_Decoder(**model_params)
 
     def forward(self, machine_state, task_state, D_TM, ninf_mask):
         # machine_state : [B, M, Feature]
@@ -33,83 +33,10 @@ class CloudMatrixModel(nn.Module):
         encoded_task, encoded_machine = self.encoder(row_emb, col_emb, D_TM)
         # (B, T, embedding), (B, M, embedding)
 
-        probs, G_t = self.decoder(encoded_machine, encoded_task, ninf_mask)
+        probs = self.decoder(encoded_machine, encoded_task, ninf_mask)
         # shape: (B, M*T)
 
-        return probs, G_t
-
-class CloudMatrixModelposition(nn.Module):
-    def __init__(self, **model_params):
-        super().__init__()
-        self.model_params = model_params
-
-        self.nT = self.model_params['nT']
-        self.nM = self.model_params['nM']
-
-        embedding_dim = self.model_params['embedding_dim']
-
-        # self.position_embedding
-        self.position_embedding = PositionalEncoding(embedding_dim, \
-                                                     self.model_params['device'])
-        self.T_embedding = nn.Linear(self.nT, embedding_dim)
-        self.M_embedding = nn.Linear(self.nM, embedding_dim)
-        self.encoder = Matrix_Encoder(**model_params)
-        self.decoder = Matrix_Decoder_with_critic(**model_params)
-
-    def forward(self, machine_state, task_state, D_TM, ninf_mask):
-        # machine_state : [B, M, Feature]
-        # task_state : [B, T, Feature]
-        # D_TM : [B, T, M, 2]
-        # ninf_mask : [B, M, T]
-
-        batch_size = machine_state.size(0)
-
-        row_emb = F.relu(self.T_embedding(task_state))
-        col_emb = F.relu(self.M_embedding(machine_state))
-        col_emb = self.position_embedding(col_emb)
-
-        encoded_task, encoded_machine = self.encoder(row_emb, col_emb, D_TM)
-        # (B, T, embedding), (B, M, embedding)
-
-        probs, G_t = self.decoder(encoded_machine, encoded_task, ninf_mask)
-        # shape: (B, M*T)
-
-        return probs, G_t
-
-class CloudMatrixModel_one(nn.Module):
-    def __init__(self, **model_params):
-        super().__init__()
-        self.model_params = model_params
-
-        self.nT = self.model_params['nT']
-        self.nM = self.model_params['nM']
-
-        embedding_dim = self.model_params['embedding_dim']
-
-        # self.position_embedding
-        self.T_embedding = nn.Linear(self.nT, embedding_dim)
-        self.M_embedding = nn.Linear(self.nM, embedding_dim)
-        self.encoder = Matrix_Encoder_one(**model_params)
-        self.decoder = Matrix_Decoder_with_critic(**model_params)
-
-    def forward(self, machine_state, task_state, D_TM, ninf_mask):
-        # machine_state : [B, M, Feature]
-        # task_state : [B, T, Feature]
-        # D_TM : [B, T, M, 2]
-        # ninf_mask : [B, M, T]
-
-        batch_size = machine_state.size(0)
-
-        row_emb = F.relu(self.T_embedding(task_state))
-        col_emb = F.relu(self.M_embedding(machine_state))
-
-        encoded_task, encoded_machine = self.encoder(row_emb, col_emb, D_TM)
-        # (B, T, embedding), (B, M, embedding)
-
-        probs, G_t = self.decoder(encoded_machine, encoded_task, ninf_mask)
-        # shape: (B, M*T)
-
-        return probs, G_t
+        return probs
     
 class CloudMatrixModel_one_pose(nn.Module):
     def __init__(self, **model_params):
@@ -126,7 +53,7 @@ class CloudMatrixModel_one_pose(nn.Module):
         self.T_embedding = nn.Linear(self.nT, embedding_dim)
         self.M_embedding = nn.Linear(self.nM, embedding_dim)
         self.encoder = Matrix_Encoder_one(**model_params)
-        self.decoder = Matrix_Decoder_with_critic(**model_params)
+        self.decoder = Matrix_Decoder(**model_params)
 
     def forward(self, machine_state, task_state, D_TM, ninf_mask):
         # machine_state : [B, M, Feature]
@@ -143,10 +70,10 @@ class CloudMatrixModel_one_pose(nn.Module):
         encoded_task, encoded_machine = self.encoder(row_emb, col_emb, D_TM)
         # (B, T, embedding), (B, M, embedding)
 
-        probs, G_t = self.decoder(encoded_machine, encoded_task, ninf_mask)
+        probs = self.decoder(encoded_machine, encoded_task, ninf_mask)
         # shape: (B, M*T)
 
-        return probs, G_t
+        return probs
 
 class Matrix_Encoder_one(nn.Module):
     def __init__(self, **model_params):
@@ -308,7 +235,7 @@ class EncodingBlock2(nn.Module):
         return out3
 
 
-class Matrix_Decoder_with_critic(nn.Module):
+class Matrix_Decoder(nn.Module):
     def __init__(self, **model_params):
         super().__init__()
         self.model_params = model_params
@@ -325,9 +252,6 @@ class Matrix_Decoder_with_critic(nn.Module):
         self.Wv = nn.Linear(embedding_dim, head_num * qkv_dim, bias=False)
 
         self.multi_head_combine = nn.Linear(head_num * qkv_dim, embedding_dim)
-
-        self.machine_pool = nn.MaxPool1d(kernel_size=5)
-        self.G_t = nn.Linear(embedding_dim, 1)
 
         self.k = None  # saved key, for multi-head attention
         self.v = None  # saved value, for multi-head_attention
@@ -377,9 +301,6 @@ class Matrix_Decoder_with_critic(nn.Module):
         mh_atten_out = self.multi_head_combine(out_concat)
         # shape: (B, M, embedding)
 
-        pool_out = self.machine_pool(mh_atten_out.transpose(1, 2)).squeeze(dim=2)
-        G_t = self.G_t(pool_out)
-
         #  Single-Head Attention, for probability calculation
         #######################################################
         score = torch.matmul(mh_atten_out, self.single_head_key)
@@ -397,7 +318,7 @@ class Matrix_Decoder_with_critic(nn.Module):
         # probs = F.log_softmax(score_masked, dim=1)
         # shape: (B, M*T)
 
-        return probs, G_t
+        return probs
 
     def _multi_head_attention_for_decoder(self, q, k, v, ninf_mask):
         # q shape: (B, H, M, qkv_dim)   :

@@ -11,7 +11,7 @@ class Fit(object):
         self.device = cfg.model_params['device']
         self.model = Qnet(**cfg.model_params).to(self.device)
         self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
-        self.scheduler = LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
+        # self.scheduler = LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
         self.save_path = cfg.model_params['save_path']
         self.load_path = cfg.model_params['load_path']
         self.policy_loss_weight = cfg.model_params['policy_loss_weight']

@@ -2,14 +2,14 @@ import torch
 import numpy as np
 import random
 import os
-from independent_job.trainer import trainer, trainerC, trainerTest
+from independent_job.trainer import trainer, trainerTest
 
 from independent_job.config import depth_config, mix_config
 from independent_job.config import fit_config
 
 if __name__ == '__main__':
     # seed
-    SEED = 71
+    SEED = 33
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
@@ -18,11 +18,11 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
     epoch = 500
     jobs_len = 5
-    model_name = 'fit'
+    model_name = 'matrix'
 
     if model_name == 'matrix':
         # encoder type
-        encoder = 'depth'
+        encoder = 'mix'
         if encoder == 'depth':
             cfg = depth_config()
             cfg.model_params['TMHA'] = 'depth'
@@ -37,13 +37,11 @@ if __name__ == '__main__':
         cfg.epoch = epoch
         cfg.jobs_len = jobs_len
         cfg.seed = SEED
+        cfg.object = 'eng'
         cfg.device = torch.device('cuda') if torch.cuda.is_available() else "cpu"
         cfg.model_params['device'] = cfg.device
-
-        cfg.model_params['policy_loss_weight'] = 1.0
-        cfg.model_params['G_t_loss_weight'] = 0.6
-        cfg.model_params['entropy_loss_weight'] = 0.00
-        cfg.model_params['save_path'] = '{}_{}_{}_{}_{}_{}00max100jobs70.pth'.format(
+        cfg.model_params['save_path'] = '{}_{}_{}_{}_{}_{}_{}.pth'.format(
+                                                                        cfg.object,
                                                                         cfg.model_name,
                                                                         cfg.epoch,
                                                                         cfg.jobs_len,
@@ -62,10 +60,10 @@ if __name__ == '__main__':
 
         cfg.device = torch.device('cuda') if torch.cuda.is_available() else "cpu"
         cfg.model_params['device'] = cfg.device
-        cfg.model_params['policy_loss_weight'] = 1.0
-        cfg.model_params['entropy_loss_weight'] = 0.0
+
         # model_name/epoch/train_len/valid_len/job_len//seed
-        cfg.model_params['save_path'] = '{}_{}_{}_{}_TEST.pth'.format(
+        cfg.model_params['save_path'] = '{}_{}_{}_{}_{}_TEST.pth'.format(
+                                                                cfg.object,
                                                                 cfg.model_name,
                                                                 cfg.epoch,
                                                                 cfg.jobs_len,

@@ -45,6 +45,9 @@ def depth_config():
                         'depth__init':(1/3)**(1/2),
                         'FC_init':(1/6)**(1/2),
 
+                        'policy_loss_weight':1.0,
+                        'entropy_loss_weight':0.01,
+
                         'save_path' : None,
                         'load_path' : None,
                         'skip':False,
@@ -77,6 +80,9 @@ def mix_config():
                         'nM':cfg.nM,
 
 
+                        'policy_loss_weight':1.0,
+                        'entropy_loss_weight':0.00,
+
                         'ms_hidden_dim': 6,
                         'ms_layer1_init': (1/3)**(1/2),
                         'ms_layer2_init': (1/6)**(1/2),
@@ -102,6 +108,7 @@ def fit_config():
     cfg.model_params = {
                         'nT':cfg.nT,
                         'nM':cfg.nM,
+                        'policy_loss_weight':1.0,
                         'save_path' : None,
                         'load_path' : None,
                     }
