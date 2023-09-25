@@ -109,6 +109,7 @@ def fit_config():
                         'nT':cfg.nT,
                         'nM':cfg.nM,
                         'policy_loss_weight':1.0,
+                        'entropy_loss_weight':0,
                         'save_path' : None,
                         'load_path' : None,
                     }
