@@ -54,7 +54,7 @@ def depth_config():
                     }
     cfg.optimizer_params = {
                         'optimizer': {
-                            'lr': 1e-3,
+                            'lr': 3e-3,
                             # 'weight_decay': 1e-5
                         },
                         'scheduler': {

@@ -3,12 +3,17 @@ import torch
 from torch.optim import Adam as Optimizer
 from torch.optim.lr_scheduler import MultiStepLR, LambdaLR, CosineAnnealingLR
 from independent_job.matrix.model import CloudMatrixModel, CloudMatrixModel_one_pose
+from independent_job.matrix.utill import CosineAnnealingWarmUpRestarts
+
 class BGCD():
     def __init__(self, cfg):
         self.device = cfg.model_params['device']
         self.model = CloudMatrixModel_one_pose(**cfg.model_params).to(self.device)
         self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
-        self.scheduler = CosineAnnealingLR(self.optimizer, T_max=100, eta_min=1e-5)
+        # self.scheduler = CosineAnnealingLR(self.optimizer, T_max=100, eta_min=1e-5)
+        # self.scheduler = None#CosineAnnealingWarmUpRestarts(self.optimizer, \
+                                                     #  T_0=50, T_mult=1, eta_max=0.01,  T_up=25, gamma=0.8)
+        self.scheduler = LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.995 ** epoch)
     
         self.save_path = cfg.model_params['save_path']
         self.load_path = cfg.model_params['load_path']
@@ -182,6 +187,6 @@ class BGCM():
         self.optimizer.zero_grad()
         loss_mean.backward()
         self.optimizer.step()
-        
+
         self.logpa_sum, self.G_ts, self.entropies = [], [], []
         return loss_mean.detach().cpu().numpy()

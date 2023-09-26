@@ -15,14 +15,14 @@ if __name__ == '__main__':
     torch.manual_seed(SEED)
     torch.cuda.manual_seed(SEED) 
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0' 
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1' 
     epoch = 500
     jobs_len = 5
-    model_name = 'fit'
+    model_name = 'matrix'
 
     if model_name == 'matrix':
         # encoder type
-        encoder = 'mix'
+        encoder = 'depth'
         if encoder == 'depth':
             cfg = depth_config()
             cfg.model_params['TMHA'] = 'depth'
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         cfg.object = 'eng'
         cfg.device = torch.device('cuda') if torch.cuda.is_available() else "cpu"
         cfg.model_params['device'] = cfg.device
-        cfg.model_params['save_path'] = '{}_{}_{}_{}_{}_{}_{}.pth'.format(
+        cfg.model_params['save_path'] = '{}_{}_{}_{}_{}_{}_{}step3e3.pth'.format(
                                                                         cfg.object,
                                                                         cfg.model_name,
                                                                         cfg.epoch,
