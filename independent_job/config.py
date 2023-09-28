@@ -53,13 +53,13 @@ def depth_config():
                         'skip':False,
                     }
     cfg.optimizer_params = {
-                        'optimizer': {
-                            'lr': 3e-3,
+                        'optimizer': {  
+                            'lr': 1e-3,
                             # 'weight_decay': 1e-5
                         },
                         'scheduler': {
-                            'milestones': [101, 151],
-                            'gamma': 0.1
+                            'milestones': [101, 201, 301, 401],
+                            'gamma': 0.5
                         }
                     }
     return cfg
