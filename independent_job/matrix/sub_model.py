@@ -90,6 +90,7 @@ class Depth_MultiHeadAttention(nn.Module):
 
         D_TM = D_TM[:, None, :, :, :].expand(batch_size, head_num, T_cnt, M_cnt, self.problem_size-1 )
         # [B, H, T, M]
+        # [B ,T, H, M, M]
 
         a_e_feature  = torch.cat((dot_product_score[..., None], D_TM), dim=4)
         # [B, H, T, M, 2]
@@ -104,7 +105,6 @@ class Depth_MultiHeadAttention(nn.Module):
 
         depth_dot_product = torch.matmul(depth_q, depth_k.transpose(3, 4))
         # depth_dot_product = depth_dot_product / self.depth_sqrt_qkv_dim
-        # [B ,T, H, M, M]
 
         depth_weights = nn.Softmax(dim=4)(depth_dot_product)
         ae_score = torch.matmul(depth_weights, depth_v)
