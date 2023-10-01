@@ -104,7 +104,7 @@ class Depth_MultiHeadAttention(nn.Module):
         # [B, T, H, M, depth_dim]
 
         depth_dot_product = torch.matmul(depth_q, depth_k.transpose(3, 4))
-        # depth_dot_product = depth_dot_product / self.depth_sqrt_qkv_dim
+        depth_dot_product = depth_dot_product / self.depth_sqrt_qkv_dim
 
         depth_weights = nn.Softmax(dim=4)(depth_dot_product)
         ae_score = torch.matmul(depth_weights, depth_v)
