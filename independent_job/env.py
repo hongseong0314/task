@@ -279,12 +279,12 @@ class EnvTest(object):
                 break
             else:
                 cpu, mem, duration = self.task_full_feature[0, task_num, [0, 1, 2]]
-                task = torch.tensor([self.time, self.time + duration, cpu, mem], \
+                duration_s = self.machines[machine_num].mips * duration
+                task = torch.tensor([self.time, self.time + duration_s, cpu, mem], \
                                     dtype=torch.float32)[None, ...]
                 self.machines[machine_num].allocation(task)
                 self.scheduling[f'{self.time}'].append(f"{task_num}-{self.task_full_feature[0, task_num, -2]}")
                 self.task_full_feature[0, task_num, -2] -= 1
-
             
 
     def episode(self, decision_maker):
