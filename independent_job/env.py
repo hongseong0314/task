@@ -381,3 +381,6 @@ class EnvTest(object):
 
         elif self.model_name == 'random':
             pass
+
+        elif self.model_name == 'first':
+            pass
