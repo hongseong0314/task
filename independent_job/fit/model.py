@@ -10,9 +10,9 @@ class Fit(object):
     def __init__(self,cfg):
         super().__init__()
         self.device = cfg.model_params['device']
-        if cfg.model_paramse['size'] == 'big':
+        if cfg.model_params['size'] == 'big':
             self.model = QnetBig(**cfg.model_params).to(self.device)
-        elif cfg.model_paramse['size'] == 'orign':
+        elif cfg.model_params['size'] == 'orign':
             self.model = Qnet(**cfg.model_params).to(self.device)
         self.optimizer = Optimizer(self.model.parameters(), **cfg.optimizer_params['optimizer'])
         self.scheduler = None #LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.99 ** epoch)
