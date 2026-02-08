@@ -13,14 +13,14 @@ from codes.job import Job
 from codes.machine import MachineConfig
 
 # env
-from independent_job.env import Env, EnvTest
+from independent_job.env import EnvTest
 from independent_job.problem import get_jobs
 # model
-from independent_job.matrix.alg import MatrixAlgorithm
-from independent_job.matrix.agent import BGCD, BGCM
+from independent_job.matrix.alg import MatrixAlgorithm, MatrixAlgorithjeep
+from independent_job.matrix.agent import BGCD, BGCM, BGCDSAC, BGCDSACA
 
 from independent_job.fit.alg import FitAlgorithm
-from independent_job.fit.model import Fit
+from independent_job.fit.model import Fit, Fit2
 
 # log
 import wandb
@@ -150,20 +150,20 @@ class trainerTest():
     def __init__(self, cfg):
         self.cfg = cfg
         self.object = cfg.object
-
+        self.resource = cfg.resource 
         if cfg.model_name == 'matrix':
             if self.cfg.encoder == 'depth':
-                self.agent = BGCD(cfg)
+                self.agent = BGCDSACA(cfg)
             else:
                 self.agent = BGCM(cfg)
 
             self.algorithm = lambda agent : MatrixAlgorithm(agent)
-            self.name = f"{self.object}-{self.cfg.model_name}-{cfg.model_params['MMHA']}"
+            self.name = f"{self.object}-{self.cfg.seed}-{cfg.model_params['MMHA']}-{cfg.resource}"
             
         elif cfg.model_name == 'fit':
-            self.agent = Fit(cfg)
+            self.agent = Fit2(cfg)
             self.algorithm = lambda cfg : FitAlgorithm(cfg)
-            self.name = f"{self.object}-{self.cfg.model_name}"
+            self.name = f"{self.object}-{self.cfg.seed}-{self.cfg.model_params['size']}-{cfg.resource}"
 
     def setup(self):
         cpus, mems, pfs, pss, pes, mips = self.cfg.m_resource_config
@@ -175,22 +175,23 @@ class trainerTest():
                 mems, pfs, pss, pes, mips)]
         self.cfg.max_energy = sum([m.ps + (m.pf - m.ps) * (1.0 ** m.pe) for m in self.cfg.machine_configs])
         
-        with open('train_s_i_d.pkl', 'rb') as file:
+        with open('train_jobs.pkl', 'rb') as file:
             self.train_jobs = pickle.load(file)
         
-        with open('j3.pkl', 'rb') as file:
+        with open('valid_job_25.pkl', 'rb') as file:
             self.valid_task = pickle.load(file) 
 
         self.best_valid_energy = self.cfg.max_energy * self.cfg.terminal_time
         self.best_valid_make_span = self.cfg.terminal_time
         self.save_dir = self.name + f"_{self.cfg.seed}"
+        self.save_dir = os.path.join("result", self.save_dir)
         try:
             if not os.path.exists(self.save_dir):
                 os.makedirs(self.save_dir)
         except OSError:
             print("Error: Failed to create the directory.")
 
-        wandb.init(project='cloud')
+        wandb.init(project=f'cloud_{self.object}_{self.resource}_ablation_woD')
         wandb.run.name = self.name 
         wandb.run.save()
 
@@ -199,14 +200,13 @@ class trainerTest():
         
     def fit(self):
         self.setup()
-
         with tqdm(range(self.cfg.epoch), unit="Run") as runing_bar:
             for i in runing_bar:
                 if self.agent.scheduler:
                     self.agent.scheduler.step()
-                loss, clock, energy, make_span = self.training(i)
+                loss, clock, energy, make_span, alpha, entropy = self.training(i)
                 
-                if i % 1 == 0:
+                if i % 5 == 0 or i == 0:
                     valid_clock, valid_energy, valid_make_span = self.valiing()
 
                     runing_bar.set_postfix(train_loss=loss,
@@ -220,7 +220,9 @@ class trainerTest():
                             'Training_make_span':make_span,
                             "valid_clock": valid_clock,
                             "valid_energy": valid_energy,
-                            'valid_make_span':valid_make_span,})
+                            'valid_make_span':valid_make_span,
+                            "alpha":alpha,
+                            "entropy":entropy})
                     
             epoch_save_model_name =  f"{i}_" + self.cfg.model_params['save_path']
             self.agent.model_save(os.path.join(self.save_dir, epoch_save_model_name))
@@ -237,7 +239,7 @@ class trainerTest():
             eg = sim.total_energy_consumptipn
             if self.object == 'eng':
                 self.agent.trajectory(-eg / (sim.max_energy * sim.terminal_time)) 
-            elif self.obejct == 'span':
+            elif self.object == 'span':
                 self.agent.trajectory(-sim.total_make_span / sim.terminal_time) 
             
             clock_list.append(sim.time)
@@ -246,22 +248,18 @@ class trainerTest():
             
         entropy_weight = self.cfg.model_params['entropy_loss_weight'] * \
             np.clip(1 - (epoch / (200)), a_min=0, a_max=None)
-        print(f"entropy_weight : {entropy_weight}")
-        loss = self.agent.optimize_model(entropy_weight)
+        # print(f"entropy_weight : {entropy_weight}") 
+        loss, alpha, entropy = self.agent.optimize_model(entropy_weight) #/ sim.terminal_time
 
-        return loss, np.mean(clock_list), np.mean(energy_list), np.mean(make_span)
+        return loss, np.mean(clock_list), np.mean(energy_list), np.mean(make_span), alpha, entropy
     
     def training(self, epoch):
         losses, clocks, energys, make_spans = [], [], [], []
         torch.cuda.empty_cache()
         self.agent.model.train()
-        while True:
-            jobs = np.random.choice(self.train_jobs, size=self.cfg.jobs_len, \
-                                            replace=False)
-            if sum([len(job.tasks) for job in jobs]) <= 100:
-                break
-        self.train_job = jobs
-        loss, clock, energy, make_span = self.roll_out(epoch)
+
+        self.train_job = self.train_jobs[epoch]
+        loss, clock, energy, make_span, alpha, entropy = self.roll_out(epoch)
 
         losses.append(loss)
         clocks.append(clock)
@@ -270,7 +268,7 @@ class trainerTest():
         if epoch % 50 == 0:
             epoch_save_model_name =  f"{epoch}_" + self.cfg.model_params['save_path']
             self.agent.model_save(os.path.join(self.save_dir, epoch_save_model_name))
-        return np.mean(losses), np.mean(clocks), np.mean(energys), np.mean(make_spans)
+        return np.mean(losses), np.mean(clocks), np.mean(energys), np.mean(make_spans), alpha, entropy
 
     def valiing(self):
         clocks, energys, make_spans = [], [], []

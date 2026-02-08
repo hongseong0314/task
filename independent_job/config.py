@@ -6,12 +6,39 @@ def base_config():
     # machine
     cfg.machines_number = 5
     cfg.nM = 2
-    cfg.m_resource_config = [[16, 32, 32, 16, 32],
-                            [0.5, 1.5, 2, 1.0, 0.5],
+    
+    ## Easy
+    # cfg.m_resource_config = [[3, 3, 3, 3, 3],
+    #                         [0.1, 0.1, 0.1, 0.1, 0.1],
+    #                         [400,400,400,400,400],
+    #                         [100,100,100,100,100],
+    #                         [1,1,1,1,1],
+    #                         [1,1,1,1,1]]
+
+    # Not same (hard)
+    cfg.m_resource_config =[[32, 16, 8, 16, 8],
+                            [1.0, 0.5, 0.2, 0.5, 0.3],
                             [675.7838, 643.8629,258.2628,332.1814,119.0417],
                             [193.4651, 193.8555,66.8607,101.3687,45.3834],
                             [0.9569,0.7257,1.5767,0.7119,1.5324],
                             [1.5,1.3,0.5,1.0,0.8]]
+    
+    ## Same
+    # cfg.m_resource_config = [[16, 16, 16, 16, 16],
+    #                         [0.5, 0.5, 0.5, 0.5, 0.5],
+    #                         [400,400,400,400,400],
+    #                         [100,100,100,100,100],
+    #                         [1,1,1,1,1],
+    #                         [1,1,1,1,1]]
+    
+    ## Same
+    # cfg.m_resource_config = [[16, 16, 16, 16, 16],
+    #                         [0.5, 0.5, 0.5, 0.5, 0.5],
+    #                         [675.7838, 643.8629,258.2628,332.1814,119.0417],
+    #                         [193.4651, 193.8555,66.8607,101.3687,45.3834],
+    #                         [0.9569,0.7257,1.5767,0.7119,1.5324],
+    #                         [1.5,1.3,0.5,1.0,0.8]]
+
     # task
     cfg.jobs_len = 10
     cfg.nT = 4
@@ -24,7 +51,7 @@ def base_config():
 
     # train
     cfg.epoch = 100
-    cfg.terminal_time = 350
+    cfg.terminal_time = 500
     return cfg
 
 def depth_config():
@@ -45,21 +72,25 @@ def depth_config():
                         'depth__init':(1/3)**(1/2),
                         'FC_init':(1/6)**(1/2),
 
+                        # 'ms_hidden_dim': 6,
+                        # 'ms_layer1_init': (1/3)**(1/2),
+                        # 'ms_layer2_init': (1/6)**(1/2),
+
                         'policy_loss_weight':1.0,
-                        'entropy_loss_weight':0.01,
+                        'entropy_loss_weight':0.05, # 0.0
 
                         'save_path' : None,
                         'load_path' : None,
                         'skip':False,
                     }
     cfg.optimizer_params = {
-                        'optimizer': {
-                            'lr': 3e-3,
-                            # 'weight_decay': 1e-5
+                        'optimizer': {  
+                            'lr': 1e-3,
+                            # 'weight_decay': 1e-5,
                         },
                         'scheduler': {
-                            'milestones': [101, 151],
-                            'gamma': 0.1
+                            'milestones': [101, 351, 401, 451], #101, 201, 301, 401 // 101, 351, 401, 451
+                            'gamma': 0.5
                         }
                     }
     return cfg
@@ -74,11 +105,28 @@ def mix_config():
                         'sqrt_qkv_dim': 8**(1/2),
                         'head_num': 4,
                         'logit_clipping': 10,
-                        'ff_hidden_dim': 32,    
-
+                        'ff_hidden_dim': 32, 
+                
+                        # 'embedding_dim': 64,
+                        # 'sqrt_embedding_dim': 64**(1/2),
+                        # 'encoder_layer_num': 3,
+                        # 'qkv_dim': 8,
+                        # 'sqrt_qkv_dim': 8**(1/2),
+                        # 'head_num': 8,
+                        # 'logit_clipping': 10,
+                        # 'ff_hidden_dim': 64,  
+                
+                        # 'embedding_dim': 16,
+                        # 'sqrt_embedding_dim': 16**(1/2),
+                        # 'encoder_layer_num': 2,
+                        # 'qkv_dim': 4,
+                        # 'sqrt_qkv_dim': 4**(1/2),
+                        # 'head_num': 4,
+                        # 'logit_clipping': 10,
+                        # 'ff_hidden_dim': 8,
+                        
                         'nT':cfg.nT,
                         'nM':cfg.nM,
-
 
                         'policy_loss_weight':1.0,
                         'entropy_loss_weight':0.00,
